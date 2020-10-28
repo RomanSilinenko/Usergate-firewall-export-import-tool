@@ -9,7 +9,7 @@ Then go to network \ Zones and enable XML-RPC feature on zone you will be access
 Scripts we developed for python 2.7. So may require some tuning to run with Python 3.
 
 
-USAGE:
+#USAGE:
 $ python firewall_rulex_exporter.py --help
 usage: firewall_rulex_exporter.py [-h] -s SERVER [-u USER] [-p PASSWD]
 
@@ -23,4 +23,6 @@ optional arguments:
   -p PASSWD, --passwd PASSWD
                         User password (default is blank)
 
-
+#TODO 
+ [ ] Add l7 apps export import
+ [ ] Adapt to Python 3
