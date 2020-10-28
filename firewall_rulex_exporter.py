@@ -1,4 +1,3 @@
-#git controlled file
 ########################################################
 #             CONFIGURATION SECTION                    #
 # use it if you have issues with ARGPARSE module import#
