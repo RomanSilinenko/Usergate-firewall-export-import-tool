@@ -90,7 +90,7 @@ except Exception as err:
 
 #       Remove all defined firewall rules.
 ##############################################################
-print '*\tNow clearing firewall rules...'
+print("*\tNow clearing firewall rules...")
 
 for fwRule in fwRules['items']:
     sys.stdout.write(next(spinner))
@@ -101,8 +101,8 @@ for fwRule in fwRules['items']:
     try:
         server.v1.firewall.rule.delete(token, fwRule['id'])
     except Exception as err:
-        print err
-    print '\trule ', fwRule['name'], ' removed.'
+        print(err)
+    print("\trule ', fwRule['name'], ' removed.")
 
 
 
@@ -112,14 +112,14 @@ for fwRule in fwRules['items']:
 
 #       Load zone objects from file
 #################################################
-print '*\tImporting Zones...'
+print("*\tImporting Zones...")
 try:
     with open('zones.json', 'r') as fh:
         importZones = json.load(fh)
 except Exception as err:
     sys.exit(err)
-print 'file zones.json loaded.'
-print 'found ',len(importZones),' zones.'
+print("file zones.json loaded.")
+print("found " + str(len(importZones)) +" zones.")
 
 #       Pull zones from UTM
 #################################################
@@ -135,7 +135,7 @@ for zone in importZones:
     #We will import only zones we did not find in UTM we importing in. e.g. if we see there is already 'Trusted' zone, we will not import it.
     if not foundZoneByName(UTMzones, zone['name']):
         try:
-            print 'Importing zone: '+zone['name']
+            print("Importing zone: "+zone['name'])
             server.v1.netmanager.zone.add(token, zone)
             c +=1
         except Exception as err:
