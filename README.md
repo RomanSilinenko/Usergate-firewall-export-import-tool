@@ -24,5 +24,8 @@ optional arguments:
                         User password (default is blank)
 
 # TODO 
-- Add l7 apps export import
+- Add l7 apps export\import
+- Add time criteria export\import
+- Add scenario criteria export\import
+- Add users criteria export\import
 - Adapt to Python 3
