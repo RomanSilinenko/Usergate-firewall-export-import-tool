@@ -1,7 +1,7 @@
 # Usergate-firewall-export-import-tool
 Basic python scripts to export\import firewall rules from Usergate UTM 5 over API
 
-To anable API interface, you have to go to the web admin console with extended feature anabled:
+To enable API interface, you have to go to the web admin console with extended feature anabled:
 https://<usergate_ip>:8001/?features=zone-xml-rpc
 
 Then go to network \ Zones and enable XML-RPC feature on zone you will be accessing from.
