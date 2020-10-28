@@ -23,6 +23,6 @@ optional arguments:
   -p PASSWD, --passwd PASSWD
                         User password (default is blank)
 
-#TODO 
- [ ] Add l7 apps export import
- [ ] Adapt to Python 3
+# TODO 
+- Add l7 apps export import
+- Adapt to Python 3
