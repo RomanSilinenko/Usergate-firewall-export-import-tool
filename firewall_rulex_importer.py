@@ -12,12 +12,12 @@ files = ['zones.json','firewall_rules.json','network_objects.json','services.jso
 for fileName in files:
     if not os.path.isfile(fileName):
         sys.exit('Warning! Can\'t find '+fileName+' file. Run rules export script first. Exiting...')
-        
+
 
 #Just a spinning dash for terminal output
 spinner = itertools.cycle(['-', '/', '|', '\\'])
 
-
+# Return True is zoneName exists in zonesList
 def foundZoneByName(zonesList, zoneName):
     for zone in zonesList:
         if zone['name'] == zoneName:
@@ -27,12 +27,12 @@ def foundZoneByName(zonesList, zoneName):
 def findL7AppIDByName(l7Catalog, l7AppName):
     for app in l7Catalog:
         if app['name'] == str(l7AppName):
-            return cat['app_id']       
+            return cat['app_id']
 
 def findL7CatIDByName(l7Catalog, l7CatName):
     for cat in l7Catalog:
         if cat['name'] == str(l7CatName):
-            return cat['id']   
+            return cat['id']
 
 def findZoneIDByName(zonesList, zoneName):
     for zone in zonesList:
@@ -42,7 +42,7 @@ def findZoneIDByName(zonesList, zoneName):
 def findServiceIDByName(seerviceList, serviceName):
     for service in seerviceList:
         if service['name'] == str(serviceName):
-            return service['id']  
+            return service['id']
 
 def findNetIDByName(networksList, networkName):
     for net in networksList:
@@ -88,7 +88,7 @@ try:
 except Exception as err:
     sys.exit(err)
 
-#       Remove all defined firewall rules. 
+#       Remove all defined firewall rules.
 ##############################################################
 print '*\tNow clearing firewall rules...'
 
@@ -102,8 +102,8 @@ for fwRule in fwRules['items']:
         server.v1.firewall.rule.delete(token, fwRule['id'])
     except Exception as err:
         print err
-    print '\trule ', fwRule['name'], ' removed.' 
-    
+    print '\trule ', fwRule['name'], ' removed.'
+
 
 
 ############################################################
@@ -115,7 +115,7 @@ for fwRule in fwRules['items']:
 print '*\tImporting Zones...'
 try:
     with open('zones.json', 'r') as fh:
-        importZones = json.load(fh)  
+        importZones = json.load(fh)
 except Exception as err:
     sys.exit(err)
 print 'file zones.json loaded.'
@@ -128,7 +128,7 @@ try:
 except Exception as err:
     sys.exit(err)
 
-#Since we cannot just remove existing zones, we will created new zones based on exported data. 
+#Since we cannot just remove existing zones, we will created new zones based on exported data.
 #The user will have to fine tune this crap by hands after import.
 c = 0
 for zone in importZones:
@@ -140,7 +140,7 @@ for zone in importZones:
             c +=1
         except Exception as err:
             print err
-    
+
 print '*\tImported ',c, ' Zones'
 c = 0
 
@@ -153,7 +153,7 @@ c = 0
 print '*\tImporting Network Objects...'
 try:
     with open('network_objects.json', 'r') as fh:
-        ImportedNetworkObjects = json.load(fh)  
+        ImportedNetworkObjects = json.load(fh)
 except Exception as err:
     sys.exit(err)
 fh.close()
@@ -187,7 +187,7 @@ for ListItem in ImportedNetworkObjects:
         server.v2.nlists.list.add.items(token, uid, netObjContents)
         c += 1
     except Exception as err:
-        print err   
+        print err
 print '*\tImported ',c, ' network objects'
 c = 0
 
@@ -199,7 +199,7 @@ print '*\tImporting User defined Services Objects...'
 #################################################
 try:
     with open('services.json', 'r') as fh:
-        ImportedServicesObjects = json.load(fh)  
+        ImportedServicesObjects = json.load(fh)
 except Exception as err:
     sys.exit(err)
 print 'file services.json loaded.'
@@ -212,7 +212,7 @@ try:
 except Exception as err:
     print err
 
-#       Remove all defined services. 
+#       Remove all defined services.
 ##############################################################
 print 'clearing service definitions...'
 if len(UTM2ServicesList) > 0:
@@ -220,7 +220,7 @@ if len(UTM2ServicesList) > 0:
         try:
             server.v1.libraries.service.delete(token,service['id'])
         except Exception as err:
-            print err          
+            print err
 
 #       Import list of services objects
 ##############################################################
@@ -230,7 +230,7 @@ for ListItem in ImportedServicesObjects:
         server.v1.libraries.service.add(token, ListItem)
         c +=1
     except Exception as err:
-        print err   
+        print err
 print '*\tImported ',c, ' service objects'
 c = 0
 
@@ -243,7 +243,7 @@ c = 0
 #################################################
 try:
     with open('firewall_rules.json', 'r') as fh:
-        importFirewallrules = json.load(fh)  
+        importFirewallrules = json.load(fh)
 except Exception as err:
     sys.exit(err)
 fh.close()
@@ -275,7 +275,7 @@ for importFwRule in importFirewallrules['items']:
     #replace DST zone names with local IDs
     for index, DstZone in enumerate(importFwRule['dst_zones']):
         importFwRule['dst_zones'][index] = findZoneIDByName(UTMzones, DstZone)
-    
+
     #replace SRC IP list names with local IDs
     for index, SrcIP in enumerate(importFwRule['src_ips']):
         listId, SrcIP_name = SrcIP
@@ -288,8 +288,8 @@ for importFwRule in importFirewallrules['items']:
     #replace service names with lical IDs
     for index, ServiceName in enumerate(importFwRule['services']):
         importFwRule['services'][index] = findServiceIDByName(UTM2ServicesList, ServiceName)
-        
-    
+
+
     importFwRule['apps'] = []
     #replace L7 Application names with local IDs
 #    newAppsList = list()
@@ -297,15 +297,15 @@ for importFwRule in importFirewallrules['items']:
 #        #if it is not empty, then last element is the readable list of applications. we pasted it during export process.
 #        for app in importFwRule['apps'].pop():
 #            if app[0] == 'app':
-#                newAppsList.append([app[0],findL7AppIDByName()])          
+#                newAppsList.append([app[0],findL7AppIDByName()])
 #            elif app[0] == 'ro_group':
 #                newAppsList.append([app[0],findL7CatIDByName()])
 #            else:
 #                pass
 #        importFwRule['apps'] = newAppsList
 #    del newAppsList
-    
-    
+
+
     print 'Importing rule:',' [',importFirewallrules['count'],'/',importFirewallrules['count'] - rules_left+1,']', importFwRule['name']
     #print 'Service: '+str(importFwRule['services'])
     #time.sleep(10)
@@ -335,5 +335,3 @@ c = 0
 
 #In [59]: fwRules['items'][7]['dst_ips']
 #Out[59]: [['list_id', 1039], ['list_id', 1002], ['list_id', 1018]]
-
-
