@@ -95,7 +95,7 @@ services = server.v1.libraries.services.fetch(token, range(100,9999))
 if len(services) > 0:
     with open('services.json','w') as f:
         json.dump(services, f)
-    print("Exported '+str(len(services))+' services.")
+    print("Exported "+str(len(services))+" services.")
     f.close()
 time.sleep(1)
 

@@ -102,7 +102,7 @@ for fwRule in fwRules['items']:
         server.v1.firewall.rule.delete(token, fwRule['id'])
     except Exception as err:
         print(err)
-    print("\trule ', fwRule['name'], ' removed.")
+    print('\trule '+ fwRule['name']+ ' removed.')
 
 
 
@@ -306,21 +306,23 @@ for importFwRule in importFirewallrules['items']:
 #    del newAppsList
 
 
-    print 'Importing rule:',' [',importFirewallrules['count'],'/',importFirewallrules['count'] - rules_left+1,']', importFwRule['name']
+    print('Importing rule:'+' ['+str(importFirewallrules['count'])+'/'+str(importFirewallrules['count'] - rules_left +1) +']  Name: '+ importFwRule['name'])
     #print 'Service: '+str(importFwRule['services'])
     #time.sleep(10)
     try:
         server.v1.firewall.rule.add(token, importFwRule)
         rules_left -=1
     except Exception as err:
-        print err
-        print '!!! Not imported:',' [',importFirewallrules['count'],'/',importFirewallrules['count'] - rules_left+1,']', importFwRule['name']
+        print(err)
+        print('!!! Not imported:'+' ['+str(importFirewallrules['count'])+'/'+str(importFirewallrules['count'] - rules_left+ 1) +']'+importFwRule['name'])
         c+=1
         pass
     c+=1
 
-print '*\tImported ',c, ' Firewall rules'
+print('*\tImported '+str(c)+' Firewall rules')
 c = 0
+
+print("Done!")
 
 
 #Orignal
