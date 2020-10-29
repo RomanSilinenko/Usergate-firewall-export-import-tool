@@ -250,61 +250,62 @@ natRules = server.v1.traffic.rules.list(token, 0, totalNatRules, {})
 
 #Pull all lists mentioned in nat rules
 #Since we do not controll IDs and GUIDs, we have to replace each ID record with its Name of all used Services, Lists and so on. We will use names in import process to restore corect IDs.
-for natRule in natRules['items']:
-#    sys.stdout.write(next(spinner))
-#    sys.stdout.flush()
-#    sys.stdout.write('\b')
-#    time.sleep(0.5)
+if natRules['count'] > 0:
+    for natRule in natRules['items']:
+    #    sys.stdout.write(next(spinner))
+    #    sys.stdout.flush()
+    #    sys.stdout.write('\b')
+    #    time.sleep(0.5)
 
-    # This section is for Source IP lists
-    if len(natRule['source_ip'])>0:
-        for item in natRule['source_ip']:
-            itemID = item[1]
-            item.remove(itemID)
-            item.append(findNetByID(userDefinedNets['items'],itemID))
+        # This section is for Source IP lists
+        if len(natRule['source_ip'])>0:
+            for item in natRule['source_ip']:
+                itemID = item[1]
+                item.remove(itemID)
+                item.append(findNetByID(userDefinedNets['items'],itemID))
 
-    # This section is for Destination IP lists
-    if len(natRule['dest_ip'])>0:
-        for item in natRule['dest_ip']:
-            itemID = item[1]
-            item.remove(itemID)
-            item.append(findNetByID(userDefinedNets['items'],itemID))
+        # This section is for Destination IP lists
+        if len(natRule['dest_ip'])>0:
+            for item in natRule['dest_ip']:
+                itemID = item[1]
+                item.remove(itemID)
+                item.append(findNetByID(userDefinedNets['items'],itemID))
 
-    # This section is for Source Zones list
-    if len(natRule['zone_in'])>0:
-        for index, item in enumerate(natRule['zone_in']):
-            if type(item) == type(int()):
-                response = server.v1.netmanager.zone.fetch(token,item)['name']
-                natRule['zone_in'][index] = response
+        # This section is for Source Zones list
+        if len(natRule['zone_in'])>0:
+            for index, item in enumerate(natRule['zone_in']):
+                if type(item) == type(int()):
+                    response = server.v1.netmanager.zone.fetch(token,item)['name']
+                    natRule['zone_in'][index] = response
 
-    # This section is for Destination Zones list
-    if len(natRule['zone_out'])>0:
-        for index, item in enumerate(natRule['zone_out']):
-            if type(item) == type(int()):
-                response = server.v1.netmanager.zone.fetch(token,item)['name']
-                natRule['zone_out'][index] = response
+        # This section is for Destination Zones list
+        if len(natRule['zone_out'])>0:
+            for index, item in enumerate(natRule['zone_out']):
+                if type(item) == type(int()):
+                    response = server.v1.netmanager.zone.fetch(token,item)['name']
+                    natRule['zone_out'][index] = response
 
-    # This section is for Services list
-    if len(natRule['service'])>0:
-        for index, item in enumerate(natRule['service']):
-            if type(item) == type(int()):
-                response = server.v1.libraries.service.fetch(token,item)['name']
-                natRule['service'][index] = response
+        # This section is for Services list
+        if len(natRule['service'])>0:
+            for index, item in enumerate(natRule['service']):
+                if type(item) == type(int()):
+                    response = server.v1.libraries.service.fetch(token,item)['name']
+                    natRule['service'][index] = response
 
 
-#dump nat rules on disk
-with open('nat_rules.json','w') as f:
-    json.dump(natRules, f)
-f.close()
-
-#Create also CSV view of firewall rules is we have unicodecsv module imported
-if libnames['unicodecsv'] == True:
-    fieldnames = natRules['items'][0].keys()
-    with open('nat_rules.csv','w') as f:
-        write = unicodecsv.DictWriter(f, fieldnames=fieldnames, dialect='excel', encoding='utf-8-sig')
-        write.writeheader()
-        write.writerows(natRules['items'])
+    #dump nat rules on disk
+    with open('nat_rules.json','w') as f:
+        json.dump(natRules, f)
     f.close()
+
+    #Create also CSV view of firewall rules is we have unicodecsv module imported
+    if libnames['unicodecsv'] == True:
+        fieldnames = natRules['items'][0].keys()
+        with open('nat_rules.csv','w') as f:
+            write = unicodecsv.DictWriter(f, fieldnames=fieldnames, dialect='excel', encoding='utf-8-sig')
+            write.writeheader()
+            write.writerows(natRules['items'])
+        f.close()
 
 
 
