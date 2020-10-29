@@ -90,7 +90,12 @@ time.sleep(1)
 ###############################################################
 
 print("Pulling services catalog...")
-services = server.v1.libraries.services.fetch(token, range(100,9999))
+services = server.v1.libraries.services.list(token, 0, 999, "", [])
+servicesList = []
+for service in services['items']:
+    servicesList.append(service['id'])
+services = server.v1.libraries.services.fetch(token, servicesList)
+
 #Dump Services defined in the appliance on disk.
 if len(services) > 0:
     with open('services.json','w') as f:
