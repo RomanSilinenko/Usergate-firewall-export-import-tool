@@ -27,5 +27,4 @@ optional arguments:
 - Add time criteria export\import
 - Add scenario criteria export\import
 - Add users criteria export\import
-- Add NAT rules import
 - Adapt to Python 3

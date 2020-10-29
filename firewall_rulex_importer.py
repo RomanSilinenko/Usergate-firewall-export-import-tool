@@ -2,7 +2,7 @@ import xmlrpclib
 import json
 import argparse
 import itertools
-import fsys
+import sys
 import os
 import time
 
@@ -84,7 +84,8 @@ print("Ok, we are in, the token is " + token)
 #       Pull firewall rules from UTM we are importing in.
 ##############################################################
 try:
-    fwRules = server.v1.firewall.rules.list(token,0,1000,{})
+    totalRules = server.v1.firewall.rules.list(token,0,0,{})['count']
+    fwRules = server.v1.firewall.rules.list(token,0,totalRules,{})
 except Exception as err:
     sys.exit(err)
 
@@ -93,16 +94,43 @@ except Exception as err:
 print("*\tNow clearing firewall rules...")
 
 for fwRule in fwRules['items']:
-    sys.stdout.write(next(spinner))
-    sys.stdout.flush()
-    sys.stdout.write('\b')
     time.sleep(0.1)
 
     try:
         server.v1.firewall.rule.delete(token, fwRule['id'])
     except Exception as err:
         print(err)
-    print('\trule '+ fwRule['name']+ ' removed.')
+    print('- \trule '+ fwRule['name']+ ' removed.')
+
+
+##############################################################
+#                -=[ Delete old NAT Rules ]=-                #
+# NOTE: we have to delete 'em BEFORE objects in these rules. #
+##############################################################
+
+#       Pull NAT rules from UTM we are importing in.
+##############################################################
+
+try:
+    totalNatRules = server.v1.traffic.rules.list(token, 0,0,{})['count']
+    natRules = server.v1.traffic.rules.list(token, 0, totalNatRules, {})
+except Exception as err:
+    print(err)
+
+
+#       Remove all defined NAT rules.
+##############################################################
+print("*\tNow clearing NAT rules...")
+
+for natRule in natRules['items']:
+    time.sleep(0.1)
+
+    try:
+        server.v1.traffic.rule.delete(token, natRule['id'])
+    except Exception as err:
+        print(err)
+    print('-\trule '+ natRule['name']+ ' removed.')
+
 
 
 
@@ -158,7 +186,7 @@ except Exception as err:
     sys.exit(err)
 fh.close()
 print('file network_objects.json loaded.')
-print('found '+len(ImportedNetworkObjects)+' network objects.')
+print('found '+str(len(ImportedNetworkObjects))+ ' network objects.')
 
 #       Pull network lists from UTM we are importing in.
 ##############################################################
@@ -248,7 +276,7 @@ except Exception as err:
     sys.exit(err)
 fh.close()
 print('firewall_rules.json loaded.')
-print('found '+str(importFirewallrules['count'])+' rules.')
+print('found '+ str(importFirewallrules['count'])+' Firewall rules.')
 rules_left = importFirewallrules['count']
 
 
@@ -321,6 +349,65 @@ for importFwRule in importFirewallrules['items']:
 
 print('*\tImported '+str(c)+' Firewall rules')
 c = 0
+
+
+############################################################
+#           -=[ Import NAT rules ]=-                       #
+############################################################
+
+
+#       Load NAT rules info from file
+#################################################
+try:
+    with open('nat_rules.json', 'r') as fh:
+        importNATrules = json.load(fh)
+except Exception as err:
+    print("Cannot open NAT rules import file. NAT rules will not be imported.")
+    sys.exit(err)
+fh.close()
+print('nat_rules.json loaded.')
+print('found '+ str(importNATrules['count'])+' NAT rules.')
+rules_left = importNATrules['count']
+
+if rules_left > 0:
+    print('****  -=[ Starting NAT rules IMPORT ]=-   ****')
+    for importNATrule in importNATrules['items']:
+        #replace SRC zone names with local IDs
+        for index, SrcZone  in enumerate(importNATrule['zone_in']):
+            importNATrule['zone_in'][index] = findZoneIDByName(UTMzones, SrcZone)
+        #replace DST zone names with local IDs
+        for index, DstZone in enumerate(importNATrule['zone_out']):
+            importNATrule['zone_out'][index] = findZoneIDByName(UTMzones, DstZone)
+
+        #replace SRC IP list names with local IDs
+        for index, SrcIP in enumerate(importNATrule['source_ip']):
+            listId, SrcIP_name = SrcIP
+            importNATrule['source_ip'][index] = [listId, findNetIDByName(UTM2NetworksList, SrcIP_name)]
+        #replace DST IP list names with local IDs
+        for index, DstIP in enumerate(importNATrule['dest_ip']):
+            listId, DstIP_name = DstIP
+            importNATrule['dest_ip'][index] = [listId, findNetIDByName(UTM2NetworksList, DstIP_name)]
+
+        #replace service names with lical IDs
+        for index, ServiceName in enumerate(importNATrule['service']):
+            importNATrule['service'][index] = findServiceIDByName(UTM2ServicesList, ServiceName)
+
+        print('Importing rule:'+' ['+str(importNATrules['count'])+'/'+str(importNATrules['count'] - rules_left +1) +']  Name: '+ importNATrule['name'])
+        #print 'Service: '+str(importFwRule['services'])
+        #time.sleep(10)
+        try:
+            server.v1.traffic.rule.add(token, importNATrule)
+            rules_left -=1
+        except Exception as err:
+            print('!!! Not imported:'+' ['+str(importNATrules['count'])+'/'+str(importNATrules['count'] - rules_left+ 1) +']'+importNATrule['name'])
+            print(err)
+            c+=1
+            pass
+        c+=1
+
+print('*\tImported '+str(c)+' NAT rules')
+c = 0
+
 
 print("Done!")
 
