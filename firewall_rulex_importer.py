@@ -2,7 +2,7 @@ import xmlrpclib
 import json
 import argparse
 import itertools
-import sys
+import fsys
 import os
 import time
 
@@ -139,9 +139,9 @@ for zone in importZones:
             server.v1.netmanager.zone.add(token, zone)
             c +=1
         except Exception as err:
-            print err
+            print(err)
 
-print '*\tImported ',c, ' Zones'
+print('*\tImported '+ str(c) + ' Zones')
 c = 0
 
 ############################################################
@@ -150,51 +150,51 @@ c = 0
 
 #       Load network objects info from file
 #################################################
-print '*\tImporting Network Objects...'
+print('*\tImporting Network Objects...')
 try:
     with open('network_objects.json', 'r') as fh:
         ImportedNetworkObjects = json.load(fh)
 except Exception as err:
     sys.exit(err)
 fh.close()
-print 'file network_objects.json loaded.'
-print 'found ',len(ImportedNetworkObjects),' network objects.'
+print('file network_objects.json loaded.')
+print('found '+len(ImportedNetworkObjects)+' network objects.')
 
 #       Pull network lists from UTM we are importing in.
 ##############################################################
 try:
     UTM2NetworksList = server.v2.nlists.list(token, 'network',0,1000,'')['items']
 except Exception as err:
-    print err
+    print(err)
 
 #       Remove all lists we can remove (pass built in lists)
 ##############################################################
-print 'clearing network objects...'
+print('clearing network objects...')
 for ListItem in UTM2NetworksList:
     if ListItem['editable']:
         try:
             server.v2.nlists.delete(token, ListItem['id'])
         except Exception as err:
-            print err
+            print(err)
 
 #       Import list of network objects
 ##############################################################
 for ListItem in ImportedNetworkObjects:
     netObjContents = ListItem.pop('netObjContents')
     try:
-        print 'Importing IP-list: '+ListItem['name']
+        print('Importing IP-list: '+ListItem['name'])
         uid = server.v2.nlists.add(token, ListItem)
         server.v2.nlists.list.add.items(token, uid, netObjContents)
         c += 1
     except Exception as err:
-        print err
-print '*\tImported ',c, ' network objects'
+        print(err)
+print('*\tImported '+str(c)+ ' network objects')
 c = 0
 
 ############################################################
 #   -=[ Import user defined services objects ]=-           #
 ############################################################
-print '*\tImporting User defined Services Objects...'
+print('*\tImporting User defined Services Objects...')
 #       Load services info from file
 #################################################
 try:
@@ -202,36 +202,36 @@ try:
         ImportedServicesObjects = json.load(fh)
 except Exception as err:
     sys.exit(err)
-print 'file services.json loaded.'
-print 'found ',len(ImportedServicesObjects),' services objects.'
+print('file services.json loaded.')
+print('found '+str(len(ImportedServicesObjects))+' services objects.')
 
 #       Pull network lists from UTM we are importing in.
 ##############################################################
 try:
     UTM2ServicesList = server.v1.libraries.services.fetch(token,range(100,9999))
 except Exception as err:
-    print err
+    print(err)
 
 #       Remove all defined services.
 ##############################################################
-print 'clearing service definitions...'
+print('clearing service definitions...')
 if len(UTM2ServicesList) > 0:
     for service in UTM2ServicesList:
         try:
             server.v1.libraries.service.delete(token,service['id'])
         except Exception as err:
-            print err
+            print(err)
 
 #       Import list of services objects
 ##############################################################
 for ListItem in ImportedServicesObjects:
     try:
-        print 'Importing Service definition: '+ListItem['name']
+        print('Importing Service definition: '+ListItem['name'])
         server.v1.libraries.service.add(token, ListItem)
         c +=1
     except Exception as err:
-        print err
-print '*\tImported ',c, ' service objects'
+        print(err)
+print('*\tImported '+ str(c)+ ' service objects')
 c = 0
 
 ############################################################
@@ -247,8 +247,8 @@ try:
 except Exception as err:
     sys.exit(err)
 fh.close()
-print 'firewall_rules.json loaded.'
-print 'found '+str(importFirewallrules['count'])+' rules.'
+print('firewall_rules.json loaded.')
+print('found '+str(importFirewallrules['count'])+' rules.')
 rules_left = importFirewallrules['count']
 
 
@@ -265,9 +265,9 @@ try:
     #Pull L7 apps catalog from UTM
     #UTM2L7AppCatalog = server.v2.nlists.list(token, 'network',0,1000,'')['items']
 except Exception as err:
-    print err
+    print(err)
 
-print '****  -=[ Starting Firewall rules IMPORT ]=-   ****'
+print('****  -=[ Starting Firewall rules IMPORT ]=-   ****')
 for importFwRule in importFirewallrules['items']:
     #replace SRC zone names with local IDs
     for index, SrcZone  in enumerate(importFwRule['src_zones']):
@@ -313,8 +313,8 @@ for importFwRule in importFirewallrules['items']:
         server.v1.firewall.rule.add(token, importFwRule)
         rules_left -=1
     except Exception as err:
-        print(err)
         print('!!! Not imported:'+' ['+str(importFirewallrules['count'])+'/'+str(importFirewallrules['count'] - rules_left+ 1) +']'+importFwRule['name'])
+        print(err)
         c+=1
         pass
     c+=1
