@@ -1,4 +1,14 @@
-import xmlrpclib
+#use this script with Pything 3
+########################################################
+#             CONFIGURATION SECTION                    #
+# use it if you have issues with ARGPARSE module import#
+########################################################
+UseraGateAddress = '127.0.0.1'
+UserName = 'Admin'
+Password = ''
+
+
+import xmlrpc.client
 import json
 import argparse
 import itertools
@@ -58,7 +68,7 @@ args = argparser.parse_args()
 
 #Connect to API endpoint
 try:
-	server = xmlrpclib.ServerProxy("http://%s:4040/rpc" % args.server, allow_none=1)
+	server = xmlrpc.client.ServerProxy("http://%s:4040/rpc" % args.server, allow_none=1)
 except Exception as err:
     sys.exit(err)
 
@@ -100,7 +110,8 @@ for fwRule in fwRules['items']:
         server.v1.firewall.rule.delete(token, fwRule['id'])
     except Exception as err:
         print(err)
-    print('- \trule '+ fwRule['name']+ ' removed.')
+#    print('- \trule '+ fwRule['name']+ ' removed.')
+    print('- \trule {fwRuleName} removed'.format(fwRuleName=fwRule['name']))
 
 
 ##############################################################
@@ -156,7 +167,7 @@ try:
 except Exception as err:
     sys.exit(err)
 
-#Since we cannot just remove existing zones, we will created new zones based on exported data.
+#Since we cannot just remove existing zones, we will create new zones based on exported data.
 #The user will have to fine tune this crap by hands after import.
 c = 0
 for zone in importZones:
@@ -171,6 +182,13 @@ for zone in importZones:
 
 print('*\tImported '+ str(c) + ' Zones')
 c = 0
+
+#       Pull updated zones from UTM
+#################################################
+try:
+    UTMzones = server.v1.netmanager.zones.list(token)
+except Exception as err:
+    sys.exit(err)
 
 ############################################################
 #   -=[ Import user defined network objects ]=-           #
@@ -285,6 +303,9 @@ rules_left = importFirewallrules['count']
 try:
     #Pull updated zones list from UTM
     UTM2zones = server.v1.netmanager.zones.list(token)
+    # print("\n\n")
+    # print(UTM2zones)
+    # print("\n\n")
     #Pull updated services list from UTM
     UTM2ServicesList = server.v1.libraries.services.fetch(token,list(range(100,9999)))
     #print 'Got updated service list. Total '+ str(len(UTM2ServicesList))+' service definitions'
@@ -338,6 +359,8 @@ for importFwRule in importFirewallrules['items']:
     #print 'Service: '+str(importFwRule['services'])
     #time.sleep(10)
     try:
+        # print(importFwRule)
+        # print("\n\n")
         server.v1.firewall.rule.add(token, importFwRule)
         rules_left -=1
     except Exception as err:
