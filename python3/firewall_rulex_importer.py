@@ -60,6 +60,13 @@ def findNetIDByName(networksList, networkName):
             return net['id']
 
 
+def findIDbyName(List2Search, Name2find):
+    for _ in List2Search:
+        if _['name'] == str(Name2find):
+            return _['id']
+
+
+
 argparser = argparse.ArgumentParser(description='Process command line params')
 argparser.add_argument("-s", "--server", required=True, help="Provide usergate appliance IP address")
 argparser.add_argument("-u", "--user", required=False, default='Admin', help="Admin login name (default is Admin)")
@@ -334,10 +341,9 @@ for importFwRule in importFirewallrules['items']:
         listId, DstIP_name = DstIP
         importFwRule['dst_ips'][index] = [listId, findNetIDByName(UTM2NetworksList, DstIP_name)]
 
-    #replace service names with lical IDs
+    #replace service names with local IDs
     for index, ServiceName in enumerate(importFwRule['services']):
         importFwRule['services'][index] = findServiceIDByName(UTM2ServicesList, ServiceName)
-
 
     importFwRule['apps'] = []
     #replace L7 Application names with local IDs
