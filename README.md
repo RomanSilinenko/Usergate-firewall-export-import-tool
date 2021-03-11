@@ -6,6 +6,10 @@ https://<usergate_ip>:8001/?features=zone-xml-rpc
 
 Then go to network \ Zones and enable XML-RPC feature on zone you will be accessing from.
 
+Tested:
+- UTM 5 -> UTM 5
+- UTM 5 -> UTM 6
+
 ## USAGE:
 $ python firewall_rulex_exporter.py --help
 
