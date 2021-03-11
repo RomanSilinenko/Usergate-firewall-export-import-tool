@@ -8,11 +8,10 @@ UserName = 'Admin'
 Password = ''
 
 import xmlrpc.client
-
 libnames = {'time': False,
             'sys': False,
             'argparse': False,
-            'json': False,
+            'json': False
             #'xmlrpc.client': False,
             }
 
@@ -136,7 +135,6 @@ for obj in userDefinedNets['items']:
         obj['netObjContents'] = netObjContents['items']
         tempUserDefinedNets.append(obj)
 
-#tempUserDefinedNets[0]['netObjContents'].append
 
 ###############################################################
 #            #Dump user defined network objects on disk       #

@@ -34,9 +34,20 @@ def findNetByID(NetwoksList, search_id):
 #    This doesn't work. Dono why.
 #    return(item['name'] if item['id'] == id for item in NetwoksList)
 
-    for item in NetwoksList:
-        if item['id'] == search_id:
-            return item['name']
+    for _ in NetwoksList:
+        if _['id'] == search_id:
+            return _['name']
+
+
+def findL7AppIDByID(AppsCatalog, search_id):
+    for _ in AppsCatalog:
+        if _['app_id'] == search_id:
+            return _['name']
+
+def findL7CatIDByID(CategoriesCatalog, search_id):
+    for _ in CategoriesCatalog:
+        if _['id'] == search_id:
+            return _['name']
 
 #if we have argparse module imported, we can use comand line args.
 #if we do not have argparse module, one will have to provide configure connection options manually.
@@ -168,6 +179,7 @@ time.sleep(0.5)
 ###############################################################
 #Pull firewall rules
 print("Pulling firewall rules...")
+# Get rules count first. Then use it to pull all rules.
 totalRules = server.v1.firewall.rules.list(token,0,0,{})['count']
 fwRules = server.v1.firewall.rules.list(token,0,totalRules,{})
 
@@ -210,29 +222,20 @@ for fwRule in fwRules['items']:
             if type(item) == type(int()):
                 response = server.v1.libraries.service.fetch(token,item)['name']
                 fwRule['services'][index] = response
-
-
     # This section is for Apps lists
-#    if len(fwRule['apps'])>0:
-#        temporaryItem = list()
-#        for app in fwRule['apps']:
-#            if len(app) == 2:
-#                l7Type, AppID = app
-#                if l7Type == 'app':
-#                    response = server.v2.core.find.l7apps(token,[AppID])
-#                    print response
-#                    temporaryItem.append(['app',response[0]['name']])
-#                    #fwRule['apps'].append(temporaryItem)
-#                elif l7Type == 'ro_group':
-#                   response = server.v2.core.find.l7categories(token,[AppID])
-#                    print response
-#                    temporaryItem.append(['ro_group',response[0]['name']])
-#                    #fwRule['apps'].append(temporaryItem)
-#        fwRule['apps'] = temporaryItem
-#        temporaryItem = []
+    if len(fwRule['apps'])>0:
+        temporaryItem = list()
+        for _, item in enumerate(fwRule['apps']):
+            l7Type, AppID = item
+            if l7Type == 'app':
+                temporaryItem.append(findL7AppIDByID(l7Apps['items'], AppID))
+            elif l7Type == 'ro_group':
+                temporaryItem.append(findL7CatIDByID(l7Categories['items'], AppID))
+                fwRule['apps'] = temporaryItem
+        fwRule['apps'] = []
+        fwRule['apps'].append(temporaryItem)
 
-
-#dump firewall rules on disk
+#dump firewall rules to disk
 with open('firewall_rules.json','w') as f:
     json.dump(fwRules, f)
 f.close()
