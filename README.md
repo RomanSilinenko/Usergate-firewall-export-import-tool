@@ -18,4 +18,4 @@ $ python firewall_rulex_exporter.py --help
 - Add time criteria export\import
 - Add scenario criteria export\import
 - Add users criteria export\import
-
+- Unify findXbyY functions

@@ -48,11 +48,9 @@ def findNamebyID(List2Search, ID2find):
 def findNetByID(NetwoksList, search_id):
 #    This doesn't work. Dono why.
 #    return(item['name'] if item['id'] == id for item in NetwoksList)
-
     for _ in NetwoksList:
         if _['id'] == search_id:
             return _['name']
-
 
 def findL7AppNameByID(AppsCatalog, search_id):
     for _ in AppsCatalog:
@@ -80,18 +78,19 @@ if libnames['argparse'] == True:
     except Exception as err:
         sys.exit(err)
 
-print("Successfully connected to " + server.v2.core.node.status()['node_name'])
-
-
 #Authenticate and get AUTH TOKEN
 try:
 	token = server.v2.core.login(args.user if libnames['argparse'] == True else UserName, args.passwd if libnames['argparse'] == True else  Password,{})["auth_token"]
 except Exception as err:
     sys.exit(err)
 
-
-print("Ok, we are in, the token is " + token)
-
+serverStatus = server.v2.core.node.status()
+serverLicenseInfo = server.v2.core.license.info(token)
+UGOSFlavor = serverLicenseInfo['version'][0]
+print("Successfully connected to {}".format(serverStatus['display_name']))
+print("UTM version : {}".format(serverLicenseInfo['version']))
+print("Devise platform: {}".format(serverLicenseInfo['product_device']))
+print("-------------------------------------------------------------------")
 print("Starting FW rules export...")
 
 
@@ -117,8 +116,12 @@ time.sleep(1)
 ###############################################################
 
 print("Pulling services catalog...")
-totalServices = server.v1.libraries.services.list(token, 0, 0, "" , [])['total']
-services = server.v1.libraries.services.list(token, 0, totalServices, "", [])
+if UGOSFlavor == "5":
+    totalServices = server.v1.libraries.services.list(token, 0, 0, "" , [])['total']
+    services = server.v1.libraries.services.list(token, 0, totalServices, "", [])
+elif UGOSFlavor == "6":
+    totalServices = server.v1.libraries.services.list(token, 0, 0, {} , [])['total']
+    services = server.v1.libraries.services.list(token, 0, totalServices, {}, [])
 servicesList = []
 for service in services['items']:
     servicesList.append(service['id'])
@@ -136,8 +139,18 @@ time.sleep(1)
 ###############################################################
 #                     Pull l7 apps catalog                    #
 ###############################################################
-totall7Apps = server.v2.core.get.l7apps(token, 0, 0, '')['count']
-l7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, '')
+
+if UGOSFlavor == "5":
+    totalServices = server.v1.libraries.services.list(token, 0, 0, "", [])['total']
+    services = server.v1.libraries.services.list(token, 0, totalServices, "", [])
+    totall7Apps = server.v2.core.get.l7apps(token, 0, 0, "")['count']
+    l7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, "")
+elif UGOSFlavor == "6":
+    totalServices = server.v1.libraries.services.list(token, 0, 0, {}, [])['total']
+    services = server.v1.libraries.services.list(token, 0, totalServices, {}, [])
+    totall7Apps = server.v2.core.get.l7apps(token, 0, 0, {}, [])['count']
+    l7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, {}, [])
+
 #Dump l7 apps catalog on disk
 if len(l7Apps):
     with open('l7_apps.json','w') as f:
