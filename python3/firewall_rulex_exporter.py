@@ -26,41 +26,21 @@ for libname in libnames.keys():
     else:
         globals()[libname] = lib
 
-
-# List2Search - List of structs
-# Name2find - String to search across list in Struct.Name field.
-def findIDbyName(List2Search, Name2find):
-    for _ in List2Search:
-        if _['name'] == str(Name2find):
-            return _['id']
-
-# List2Search - List of structs
-# Name2find - String to search across list in Struct.Name field.
+##  This function returns name of an object by its ID
+##  List2Search - List of structs
+##  Name2find - String to search across list in Struct.Name field.
 def findNamebyID(List2Search, ID2find):
-    for _ in List2Search:
-        if _['id'] == str(ID2find):
-            return _['id']
+    if 'id' in List2Search[0].keys():
+        print('ID branch')
+        for _ in List2Search:
+            if _['id'] == ID2find:
+                return _['name']
+    elif 'app_id' in List2Search[0].keys():
+        print("app_ip branch")
+        for _ in List2Search:
+            if _['app_id'] == ID2find:
+                return _['name']
 
-
-##  This function returns name of defined network object by its ID
-##  NetwoksList is expected to be List
-##  search_id   is expected tp be Int
-def findNetByID(NetwoksList, search_id):
-#    This doesn't work. Dono why.
-#    return(item['name'] if item['id'] == id for item in NetwoksList)
-    for _ in NetwoksList:
-        if _['id'] == search_id:
-            return _['name']
-
-def findL7AppNameByID(AppsCatalog, search_id):
-    for _ in AppsCatalog:
-        if _['app_id'] == search_id:
-            return _['name']
-
-def findL7CatNameByID(CategoriesCatalog, search_id):
-    for _ in CategoriesCatalog:
-        if _['id'] == search_id:
-            return _['name']
 
 #if we have argparse module imported, we can use comand line args.
 #if we do not have argparse module, one will have to provide configure connection options manually.
@@ -141,13 +121,9 @@ time.sleep(1)
 ###############################################################
 
 if UGOSFlavor == "5":
-    totalServices = server.v1.libraries.services.list(token, 0, 0, "", [])['total']
-    services = server.v1.libraries.services.list(token, 0, totalServices, "", [])
-    totall7Apps = server.v2.core.get.l7apps(token, 0, 0, "")['count']
+    totall7Apps = server.v2.core.get.l7apps(token, 0, 0, '')['count']
     l7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, "")
 elif UGOSFlavor == "6":
-    totalServices = server.v1.libraries.services.list(token, 0, 0, {}, [])['total']
-    services = server.v1.libraries.services.list(token, 0, totalServices, {}, [])
     totall7Apps = server.v2.core.get.l7apps(token, 0, 0, {}, [])['count']
     l7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, {}, [])
 
@@ -224,14 +200,14 @@ for fwRule in fwRules['items']:
         for item in fwRule['src_ips']:
             itemID = item[1]
             item.remove(itemID)
-            item.append(findNetByID(userDefinedNets['items'],itemID))
+            item.append(findNamebyID(userDefinedNets['items'],itemID))
 
     # This section is for Destination IP lists
     if len(fwRule['dst_ips'])>0:
         for item in fwRule['dst_ips']:
             itemID = item[1]
             item.remove(itemID)
-            item.append(findNetByID(userDefinedNets['items'],itemID))
+            item.append(findNamebyID(userDefinedNets['items'],itemID))
 
     # This section is for Source Zones list
     if len(fwRule['src_zones'])>0:
@@ -259,9 +235,9 @@ for fwRule in fwRules['items']:
         for _, item in enumerate(fwRule['apps']):
             l7Type, AppID = item
             if l7Type == 'app':
-                temporaryItem.append(['app', findL7AppNameByID(l7Apps['items'], AppID)])
+                temporaryItem.append(['app', findNamebyID(l7Apps['items'], AppID)])
             elif l7Type == 'ro_group':
-                temporaryItem.append(['ro_group', findL7CatNameByID(l7Categories['items'], AppID)])
+                temporaryItem.append(['ro_group', findNamebyID(l7Categories['items'], AppID)])
                 fwRule['apps'] = temporaryItem
         fwRule['apps'] = []
         fwRule['apps']= temporaryItem
@@ -302,14 +278,14 @@ if natRules['count'] > 0:
             for item in natRule['source_ip']:
                 itemID = item[1]
                 item.remove(itemID)
-                item.append(findNetByID(userDefinedNets['items'],itemID))
+                item.append(findNamebyID(userDefinedNets['items'],itemID))
 
         # This section is for Destination IP lists
         if len(natRule['dest_ip'])>0:
             for item in natRule['dest_ip']:
                 itemID = item[1]
                 item.remove(itemID)
-                item.append(findNetByID(userDefinedNets['items'],itemID))
+                item.append(findNamebyID(userDefinedNets['items'],itemID))
 
         # This section is for Source Zones list
         if len(natRule['zone_in'])>0:

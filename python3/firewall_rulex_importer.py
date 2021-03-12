@@ -3,6 +3,7 @@
 #             CONFIGURATION SECTION                    #
 # use it if you have issues with ARGPARSE module import#
 ########################################################
+
 UseraGateAddress = '127.0.0.1'
 UserName = 'Admin'
 Password = ''
@@ -23,14 +24,16 @@ for fileName in files:
     if not os.path.isfile(fileName):
         sys.exit("Warning! Can't find {} file. Run rules export script first. Exiting...".format(fileName))
 
-
-# List2Search - List of structs
-# Name2find - String to search across list in Struct.Name field.
+##  This function returns internal ID of defined object by its Name
+##  List2Search - List of structs
+##  Name2find - String to search across list in Struct.Name field.
 def findIDbyName(List2Search, Name2find):
     for _ in List2Search:
         if _['name'] == Name2find:
-            return _['id']
-
+            if 'id' in _.keys()
+                return _['id']
+            elif 'app_id' in _.keys():
+                return _['app_id']
 
 
 argparser = argparse.ArgumentParser(description='Process command line params')
@@ -38,6 +41,10 @@ argparser.add_argument("-s", "--server", required=True, help="Provide usergate a
 argparser.add_argument("-u", "--user", required=False, default='Admin', help="Admin login name (default is Admin)")
 argparser.add_argument("-p", "--passwd", required=False, default='', help="User password (default is blank)")
 args = argparser.parse_args()
+
+# WARNING MESSAGE BEFORE WE CONTINUE
+if input("This script will erace all firewall configurations at -> {} <-\nAre you sure? (y/n)".format(args.server)) != "y":
+    exit()
 
 #Connect to API endpoint
 try:
@@ -348,31 +355,24 @@ for importFwRule in importFirewallrules['items']:
     if L7Avaliable:
         newAppsList = []
         if len(importFwRule['apps']) > 0:
-            #if it is not empty, then last element is the human readable list of applications. We pasted it during export process.
-            # for app in importFwRule['apps']:
-            #     print(app)
+            #if it is not empty, then it is the human readable list of applications. We pasted it during export process.
             for app in importFwRule['apps']:
                 AppType, AppName = app
                 print("AppType: {}, AppName: {}".format(AppType, AppName))
-                #newAppsList.append([AppType, findIDbyName(UTM2L7AppCatalog, AppName)])
                 if AppType == 'app':
                     newAppsList.append([AppType, findIDbyName(L7Apps, AppName)])
                 elif AppType == 'ro_group':
                     newAppsList.append([AppType, findIDbyName(L7Categories, AppName)])
 
             importFwRule['apps'] = newAppsList
-            #del newAppsList
             print("importFwRule['apps'] : {}".format(importFwRule['apps']))
     else:
         importFwRule['apps'] = []
 
 
     print('Importing rule:'+' ['+str(importFirewallrules['count'])+'/'+str(importFirewallrules['count'] - rules_left +1) +']  Name: '+ importFwRule['name'])
-    #print 'Service: '+str(importFwRule['services'])
-    #time.sleep(10)
+
     try:
-        # print(importFwRule)
-        # print("\n\n")
         server.v1.firewall.rule.add(token, importFwRule)
         rules_left -=1
     except Exception as err:
