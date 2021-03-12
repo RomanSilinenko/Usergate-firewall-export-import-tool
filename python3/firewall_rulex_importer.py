@@ -307,6 +307,7 @@ try:
     totall7Apps = server.v2.core.get.l7apps(token, 0, 0, {}, [])['count']
     if totall7Apps == 0:
         L7Avaliable = False
+        print("L7 catalog is not empty! We will skip L7 apps in firewall rules.\nCheck your license and make sure you have L7 catalog installed.")
     else:
         L7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, {}, [])['items']
 except Exception as err:
@@ -343,7 +344,6 @@ for importFwRule in importFirewallrules['items']:
     for index, ServiceName in enumerate(importFwRule['services']):
         importFwRule['services'][index] = findIDbyName(UTM2ServicesList, ServiceName)
 
-#    importFwRule['apps'] = []
     #replace L7 Application names with local IDs
     if L7Avaliable:
         newAppsList = []
