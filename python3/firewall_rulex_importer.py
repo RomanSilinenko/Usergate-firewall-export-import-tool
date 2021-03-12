@@ -21,7 +21,7 @@ import time
 files = ['zones.json','firewall_rules.json','network_objects.json','services.json']
 for fileName in files:
     if not os.path.isfile(fileName):
-        sys.exit('Warning! Can\'t find '+fileName+' file. Run rules export script first. Exiting...')
+        sys.exit("Warning! Can't find {} file. Run rules export script first. Exiting...".format(fileName))
 
 
 # List2Search - List of structs
@@ -307,7 +307,7 @@ try:
     totall7Apps = server.v2.core.get.l7apps(token, 0, 0, {}, [])['count']
     if totall7Apps == 0:
         L7Avaliable = False
-        print("L7 catalog is not empty! We will skip L7 apps in firewall rules.\nCheck your license and make sure you have L7 catalog installed.")
+        print("L7 catalog is empty! We will skip L7 apps in firewall rules.\nCheck your license and make sure you have L7 catalog installed.")
     else:
         L7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, {}, [])['items']
 except Exception as err:
@@ -322,7 +322,7 @@ try:
 except Exception as err:
     print(err)
 
-print('****  -=[ Starting Firewall rules IMPORT ]=-   ****')
+print('\n****  -=[ Starting Firewall rules IMPORT ]=-   ****\n')
 for importFwRule in importFirewallrules['items']:
     #replace SRC zone names with local IDs
     for index, SrcZone  in enumerate(importFwRule['src_zones']):
@@ -405,7 +405,7 @@ print('Found '+ str(importNATrules['count'])+' NAT rules.')
 rules_left = importNATrules['count']
 
 if rules_left > 0:
-    print('****  -=[ Starting NAT rules IMPORT ]=-   ****')
+    print('\n****  -=[ Starting NAT rules IMPORT ]=-   ****\n')
     for importNATrule in importNATrules['items']:
         #replace SRC zone names with local IDs
         for index, SrcZone  in enumerate(importNATrule['zone_in']):
