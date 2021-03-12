@@ -53,8 +53,8 @@
 
 
 ### Как пользоваться:
-Читать встроеный help:\
->$ python3 firewall_rulex_exporter.py --help**
+Читать встроеный help:
+>$ python3 firewall_rulex_exporter.py --help
 
 ## EN
 Basic python scripts to export\import firewall rules from Usergate UTM 5/6 over API
@@ -69,7 +69,7 @@ Tested:
 - UTM 5 -> UTM 6
 
 ### USAGE:
->$ python3 firewall_rulex_exporter.py --help**
+>$ python3 firewall_rulex_exporter.py --help
 
 ### TODO 
 - Add l7 apps import (export is done)
