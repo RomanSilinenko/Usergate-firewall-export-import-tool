@@ -22,7 +22,6 @@ for libname in libnames.keys():
         libnames[libname] = True
     except:
         print(sys.exc_info())
-#        sys.exit()
     else:
         globals()[libname] = lib
 
@@ -31,12 +30,10 @@ for libname in libnames.keys():
 ##  Name2find - String to search across list in Struct.Name field.
 def findNamebyID(List2Search, ID2find):
     if 'id' in List2Search[0].keys():
-        print('ID branch')
         for _ in List2Search:
             if _['id'] == ID2find:
                 return _['name']
     elif 'app_id' in List2Search[0].keys():
-        print("app_ip branch")
         for _ in List2Search:
             if _['app_id'] == ID2find:
                 return _['name']

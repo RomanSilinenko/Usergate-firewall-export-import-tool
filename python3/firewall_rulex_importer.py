@@ -30,7 +30,7 @@ for fileName in files:
 def findIDbyName(List2Search, Name2find):
     for _ in List2Search:
         if _['name'] == Name2find:
-            if 'id' in _.keys()
+            if 'id' in _.keys():
                 return _['id']
             elif 'app_id' in _.keys():
                 return _['app_id']
@@ -62,10 +62,6 @@ try:
 except Exception as err:
     sys.exit(err)
 
-
-print("Ok, we are in, the token is " + token)
-
-
 ##############################################################
 #                -=[ Delete old FW Rules ]=-                 #
 # NOTE: we have to delete 'em BEFORE objects in these rules. #
@@ -90,7 +86,6 @@ for fwRule in fwRules['items']:
         server.v1.firewall.rule.delete(token, fwRule['id'])
     except Exception as err:
         print(err)
-#    print('- \trule '+ fwRule['name']+ ' removed.')
     print('- \tRule {fwRuleName} removed'.format(fwRuleName=fwRule['name']))
 
 
