@@ -24,45 +24,11 @@ for fileName in files:
         sys.exit('Warning! Can\'t find '+fileName+' file. Run rules export script first. Exiting...')
 
 
-#Just a spinning dash for terminal output
-spinner = itertools.cycle(['-', '/', '|', '\\'])
-
-# Return True is zoneName exists in zonesList
-def foundZoneByName(zonesList, zoneName):
-    for zone in zonesList:
-        if zone['name'] == zoneName:
-            return True
-    return False
-
-def findL7AppIDByName(l7Catalog, l7AppName):
-    for app in l7Catalog:
-        if app['name'] == str(l7AppName):
-            return cat['app_id']
-
-def findL7CatIDByName(l7Catalog, l7CatName):
-    for cat in l7Catalog:
-        if cat['name'] == str(l7CatName):
-            return cat['id']
-
-def findZoneIDByName(zonesList, zoneName):
-    for zone in zonesList:
-        if zone['name'] == str(zoneName):
-            return zone['id']
-
-def findServiceIDByName(seerviceList, serviceName):
-    for service in seerviceList:
-        if service['name'] == str(serviceName):
-            return service['id']
-
-def findNetIDByName(networksList, networkName):
-    for net in networksList:
-        if net['name'] == str(networkName):
-            return net['id']
-
-
+# List2Search - List of structs
+# Name2find - String to search across list in Struct.Name field.
 def findIDbyName(List2Search, Name2find):
     for _ in List2Search:
-        if _['name'] == str(Name2find):
+        if _['name'] == Name2find:
             return _['id']
 
 
@@ -118,7 +84,7 @@ for fwRule in fwRules['items']:
     except Exception as err:
         print(err)
 #    print('- \trule '+ fwRule['name']+ ' removed.')
-    print('- \trule {fwRuleName} removed'.format(fwRuleName=fwRule['name']))
+    print('- \tRule {fwRuleName} removed'.format(fwRuleName=fwRule['name']))
 
 
 ##############################################################
@@ -147,7 +113,7 @@ for natRule in natRules['items']:
         server.v1.traffic.rule.delete(token, natRule['id'])
     except Exception as err:
         print(err)
-    print('-\trule '+ natRule['name']+ ' removed.')
+    print('-\tRule '+ natRule['name']+ ' removed.')
 
 
 
@@ -164,8 +130,8 @@ try:
         importZones = json.load(fh)
 except Exception as err:
     sys.exit(err)
-print("file zones.json loaded.")
-print("found " + str(len(importZones)) +" zones.")
+print("File [zones.json] loaded.")
+print("Found " + str(len(importZones)) +" zones.")
 
 #       Pull zones from UTM
 #################################################
@@ -179,7 +145,7 @@ except Exception as err:
 c = 0
 for zone in importZones:
     #We will import only zones we did not find in UTM we importing in. e.g. if we see there is already 'Trusted' zone, we will not import it.
-    if not foundZoneByName(UTMzones, zone['name']):
+    if not findIDbyName(UTMzones, zone['name']):
         try:
             print("Importing zone: "+zone['name'])
             server.v1.netmanager.zone.add(token, zone)
@@ -210,8 +176,8 @@ try:
 except Exception as err:
     sys.exit(err)
 fh.close()
-print('file network_objects.json loaded.')
-print('found '+str(len(ImportedNetworkObjects))+ ' network objects.')
+print('File [network_objects.json] loaded.')
+print('Found '+str(len(ImportedNetworkObjects))+ ' network objects.')
 
 #       Pull network lists from UTM we are importing in.
 ##############################################################
@@ -222,7 +188,7 @@ except Exception as err:
 
 #       Remove all lists we can remove (pass built in lists)
 ##############################################################
-print('clearing network objects...')
+print('Clearing network objects...')
 for ListItem in UTM2NetworksList:
     if ListItem['editable']:
         try:
@@ -255,19 +221,20 @@ try:
         ImportedServicesObjects = json.load(fh)
 except Exception as err:
     sys.exit(err)
-print('file services.json loaded.')
-print('found '+str(len(ImportedServicesObjects))+' services objects.')
+print('File [services.json] loaded.')
+print('Found '+str(len(ImportedServicesObjects))+' services objects.')
 
 #       Pull network lists from UTM we are importing in.
 ##############################################################
 try:
-    UTM2ServicesList = server.v1.libraries.services.fetch(token,list(range(100,9999)))
+    totalServices    = server.v1.libraries.services.list(token, 0, 0, {} , [])['total']
+    UTM2ServicesList = server.v1.libraries.services.list(token, 0, totalServices, {}, [])['items']
 except Exception as err:
     print(err)
 
 #       Remove all defined services.
 ##############################################################
-print('clearing service definitions...')
+print('Clearing service definitions...')
 if len(UTM2ServicesList) > 0:
     for service in UTM2ServicesList:
         try:
@@ -278,12 +245,15 @@ if len(UTM2ServicesList) > 0:
 #       Import list of services objects
 ##############################################################
 for ListItem in ImportedServicesObjects:
-    try:
-        print('Importing Service definition: '+ListItem['name'])
-        server.v1.libraries.service.add(token, ListItem)
-        c +=1
-    except Exception as err:
-        print(err)
+    if ListItem['name'] == 'HTTP Proxy':
+        pass
+    else:
+        try:
+            print('Importing Service definition: '+ListItem['name'])
+            server.v1.libraries.service.add(token, ListItem)
+            c +=1
+        except Exception as err:
+            print(err)
 print('*\tImported '+ str(c)+ ' service objects')
 c = 0
 
@@ -300,8 +270,8 @@ try:
 except Exception as err:
     sys.exit(err)
 fh.close()
-print('firewall_rules.json loaded.')
-print('found '+ str(importFirewallrules['count'])+' Firewall rules.')
+print('Firewall_rules.json loaded.')
+print('Found '+ str(importFirewallrules['count'])+' Firewall rules.')
 rules_left = importFirewallrules['count']
 
 
@@ -310,16 +280,15 @@ rules_left = importFirewallrules['count']
 try:
     #Pull updated zones list from UTM
     UTM2zones = server.v1.netmanager.zones.list(token)
-    # print("\n\n")
-    # print(UTM2zones)
-    # print("\n\n")
     #Pull updated services list from UTM
-    UTM2ServicesList = server.v1.libraries.services.fetch(token,list(range(100,9999)))
-    #print 'Got updated service list. Total '+ str(len(UTM2ServicesList))+' service definitions'
+    totalServices = server.v1.libraries.services.list(token, 0, 0, {} , [])['total']
+    UTM2ServicesList = server.v1.libraries.services.list(token,0, totalServices, {}, [])['items']
+    #UTM2ServicesList = server.v1.libraries.services.fetch(token,list(range(100,9999)))
     #Pull updated networks list from UTM
     UTM2NetworksList = server.v2.nlists.list(token, 'network',0,1000,'')['items']
     #Pull L7 apps catalog from UTM
-    #UTM2L7AppCatalog = server.v2.nlists.list(token, 'network',0,1000,'')['items']
+    UTM2L7AppCatalog = server.v2.nlists.list(token, 'network',0,1000,'')['items']
+
 except Exception as err:
     print(err)
 
@@ -327,38 +296,53 @@ print('****  -=[ Starting Firewall rules IMPORT ]=-   ****')
 for importFwRule in importFirewallrules['items']:
     #replace SRC zone names with local IDs
     for index, SrcZone  in enumerate(importFwRule['src_zones']):
-        importFwRule['src_zones'][index] = findZoneIDByName(UTMzones, SrcZone)
+        importFwRule['src_zones'][index] = findIDbyName(UTMzones, SrcZone)
     #replace DST zone names with local IDs
     for index, DstZone in enumerate(importFwRule['dst_zones']):
-        importFwRule['dst_zones'][index] = findZoneIDByName(UTMzones, DstZone)
+        importFwRule['dst_zones'][index] = findIDbyName(UTMzones, DstZone)
 
     #replace SRC IP list names with local IDs
     for index, SrcIP in enumerate(importFwRule['src_ips']):
         listId, SrcIP_name = SrcIP
-        importFwRule['src_ips'][index] = [listId, findNetIDByName(UTM2NetworksList, SrcIP_name)]
+        importFwRule['src_ips'][index] = [listId, findIDbyName(UTM2NetworksList, SrcIP_name)]
     #replace DST IP list names with local IDs
     for index, DstIP in enumerate(importFwRule['dst_ips']):
         listId, DstIP_name = DstIP
-        importFwRule['dst_ips'][index] = [listId, findNetIDByName(UTM2NetworksList, DstIP_name)]
+        importFwRule['dst_ips'][index] = [listId, findIDbyName(UTM2NetworksList, DstIP_name)]
 
     #replace service names with local IDs
     for index, ServiceName in enumerate(importFwRule['services']):
-        importFwRule['services'][index] = findServiceIDByName(UTM2ServicesList, ServiceName)
+        importFwRule['services'][index] = findIDbyName(UTM2ServicesList, ServiceName)
 
-    importFwRule['apps'] = []
+#    importFwRule['apps'] = []
     #replace L7 Application names with local IDs
-#    newAppsList = list()
-#    if len(importFwRule['apps']) > 0:
-#        #if it is not empty, then last element is the readable list of applications. we pasted it during export process.
-#        for app in importFwRule['apps'].pop():
-#            if app[0] == 'app':
-#                newAppsList.append([app[0],findL7AppIDByName()])
-#            elif app[0] == 'ro_group':
-#                newAppsList.append([app[0],findL7CatIDByName()])
-#            else:
-#                pass
-#        importFwRule['apps'] = newAppsList
-#    del newAppsList
+    #newAppsList = list()
+    if len(importFwRule['apps']) > 0:
+    #if it is not empty, then last element is the human readable list of applications. We pasted it during export process.
+       for x, y in enumerate(importFwRule['apps']):
+           print("1st : {}; 2nd: {}".format(x,y))
+   #         if appName == 'app':
+   #             newAppsList.append(findIDbyName(UTM2L7AppCatalog, appName))
+   #         elif appName == 'ro_group':
+   #             newAppsList.append(findIDbyName())
+   #         else:
+   #             pass
+   #      importFwRule['apps'] = newAppsList
+   # del newAppsList
+    importFwRule['apps'] = []
+
+
+# temporaryItem = list()
+# for _, item in enumerate(fwRule['apps']):
+#     l7Type, AppID = item
+#     if l7Type == 'app':
+#         temporaryItem.append(findL7AppIDByID(l7Apps['items'], AppID))
+#     elif l7Type == 'ro_group':
+#         temporaryItem.append(findL7CatIDByID(l7Categories['items'], AppID))
+#         fwRule['apps'] = temporaryItem
+# fwRule['apps'] = []
+# fwRule['apps'].append(temporaryItem)
+
 
 
     print('Importing rule:'+' ['+str(importFirewallrules['count'])+'/'+str(importFirewallrules['count'] - rules_left +1) +']  Name: '+ importFwRule['name'])
@@ -394,8 +378,8 @@ except Exception as err:
     print("Cannot open NAT rules import file. NAT rules will not be imported.")
     sys.exit(err)
 fh.close()
-print('nat_rules.json loaded.')
-print('found '+ str(importNATrules['count'])+' NAT rules.')
+print('File [nat_rules.json] loaded.')
+print('Found '+ str(importNATrules['count'])+' NAT rules.')
 rules_left = importNATrules['count']
 
 if rules_left > 0:
@@ -403,23 +387,23 @@ if rules_left > 0:
     for importNATrule in importNATrules['items']:
         #replace SRC zone names with local IDs
         for index, SrcZone  in enumerate(importNATrule['zone_in']):
-            importNATrule['zone_in'][index] = findZoneIDByName(UTMzones, SrcZone)
+            importNATrule['zone_in'][index] = findIDbyName(UTMzones, SrcZone)
         #replace DST zone names with local IDs
         for index, DstZone in enumerate(importNATrule['zone_out']):
-            importNATrule['zone_out'][index] = findZoneIDByName(UTMzones, DstZone)
+            importNATrule['zone_out'][index] = findIDbyName(UTMzones, DstZone)
 
         #replace SRC IP list names with local IDs
         for index, SrcIP in enumerate(importNATrule['source_ip']):
             listId, SrcIP_name = SrcIP
-            importNATrule['source_ip'][index] = [listId, findNetIDByName(UTM2NetworksList, SrcIP_name)]
+            importNATrule['source_ip'][index] = [listId, findIDbyName(UTM2NetworksList, SrcIP_name)]
         #replace DST IP list names with local IDs
         for index, DstIP in enumerate(importNATrule['dest_ip']):
             listId, DstIP_name = DstIP
-            importNATrule['dest_ip'][index] = [listId, findNetIDByName(UTM2NetworksList, DstIP_name)]
+            importNATrule['dest_ip'][index] = [listId, findIDbyName(UTM2NetworksList, DstIP_name)]
 
         #replace service names with lical IDs
         for index, ServiceName in enumerate(importNATrule['service']):
-            importNATrule['service'][index] = findServiceIDByName(UTM2ServicesList, ServiceName)
+            importNATrule['service'][index] = findIDbyName(UTM2ServicesList, ServiceName)
 
         print('Importing rule:'+' ['+str(importNATrules['count'])+'/'+str(importNATrules['count'] - rules_left +1) +']  Name: '+ importNATrule['name'])
         #print 'Service: '+str(importFwRule['services'])
@@ -434,22 +418,8 @@ if rules_left > 0:
             pass
         c+=1
 
-print('*\tImported '+str(c)+' NAT rules')
+print('*\tImported {} NAT rules'.format(c))
 c = 0
 
 
 print("Done!")
-
-
-#Orignal
-#In [56]: fwRules['items'][7]['services']
-#Out[56]: [120, 121, 158, 104]
-
-#In [57]: fwRules['items'][7]['apps']
-#Out[57]: [['ro_group', 4], ['ro_group', 6], ['app', 7738], ['app', 230], ['app', 5577]]
-
-#In [58]: fwRules['items'][7]['dst_zones']
-#Out[58]: [2, 4, 1]
-
-#In [59]: fwRules['items'][7]['dst_ips']
-#Out[59]: [['list_id', 1039], ['list_id', 1002], ['list_id', 1018]]

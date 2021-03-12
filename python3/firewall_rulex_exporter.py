@@ -27,6 +27,21 @@ for libname in libnames.keys():
         globals()[libname] = lib
 
 
+# List2Search - List of structs
+# Name2find - String to search across list in Struct.Name field.
+def findIDbyName(List2Search, Name2find):
+    for _ in List2Search:
+        if _['name'] == str(Name2find):
+            return _['id']
+
+# List2Search - List of structs
+# Name2find - String to search across list in Struct.Name field.
+def findNamebyID(List2Search, ID2find):
+    for _ in List2Search:
+        if _['id'] == str(ID2find):
+            return _['id']
+
+
 ##  This function returns name of defined network object by its ID
 ##  NetwoksList is expected to be List
 ##  search_id   is expected tp be Int
@@ -102,7 +117,8 @@ time.sleep(1)
 ###############################################################
 
 print("Pulling services catalog...")
-services = server.v1.libraries.services.list(token, 0, 999, "", [])
+totalServices = server.v1.libraries.services.list(token, 0, 0, "" , [])['total']
+services = server.v1.libraries.services.list(token, 0, totalServices, "", [])
 servicesList = []
 for service in services['items']:
     servicesList.append(service['id'])
@@ -222,7 +238,7 @@ for fwRule in fwRules['items']:
             if type(item) == type(int()):
                 response = server.v1.libraries.service.fetch(token,item)['name']
                 fwRule['services'][index] = response
-    # This section is for Apps lists
+    # This section is for L7 Apps lists
     if len(fwRule['apps'])>0:
         temporaryItem = list()
         for _, item in enumerate(fwRule['apps']):
