@@ -14,10 +14,14 @@
 
 #### Общая идея работы скриптов
 Вводные:
+
+
 Все записи в системе индексируются по внутреннему уникальному идентификатору. Т.е. Имя записи не есть его уникальный идентификатор. И если мы возьмем запись с именем "Block List X" и создадим на другом инстансе запись с точно таким же именем, это будут две разные записи. Поэтому мы не можем прямо переносить записи их одного инстанса в другой.
+
+
 Пример:
 Вытащим из ЮТМ одно из правил МЭ:
-```json
+```
 {'id': 763,
  'deleted_users': [],
  'name': 'block to Black Listed',
@@ -52,7 +56,7 @@
 
 ### Как пользоваться:
 Читать встроеный help:
-**$ python3 firewall_rulex_exporter.py --help**
+>$ python3 firewall_rulex_exporter.py --help**
 
 ## EN
 Basic python scripts to export\import firewall rules from Usergate UTM 5/6 over API
@@ -67,7 +71,7 @@ Tested:
 - UTM 5 -> UTM 6
 
 ### USAGE:
-**$ python3 firewall_rulex_exporter.py --help**
+>$ python3 firewall_rulex_exporter.py --help**
 
 ### TODO 
 - Add l7 apps import (export is done)
