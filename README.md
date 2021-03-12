@@ -19,3 +19,4 @@ $ python firewall_rulex_exporter.py --help
 - Add scenario criteria export\import
 - Add users criteria export\import
 - Unify findXbyY functions
+- Do something with imports section. It is not pretty.
