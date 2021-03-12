@@ -152,6 +152,8 @@ for zone in importZones:
             c +=1
         except Exception as err:
             print(err)
+    else:
+        print("*\tZone [{}] already exists. Skipping".format(zone['name']))
 
 print('*\tImported '+ str(c) + ' Zones')
 c = 0
@@ -270,7 +272,7 @@ try:
 except Exception as err:
     sys.exit(err)
 fh.close()
-print('Firewall_rules.json loaded.')
+print('File [firewall_rules.json] loaded.')
 print('Found '+ str(importFirewallrules['count'])+' Firewall rules.')
 rules_left = importFirewallrules['count']
 
@@ -280,15 +282,42 @@ rules_left = importFirewallrules['count']
 try:
     #Pull updated zones list from UTM
     UTM2zones = server.v1.netmanager.zones.list(token)
+except Exception as err:
+    print(err)
+
+try:
     #Pull updated services list from UTM
-    totalServices = server.v1.libraries.services.list(token, 0, 0, {} , [])['total']
-    UTM2ServicesList = server.v1.libraries.services.list(token,0, totalServices, {}, [])['items']
+    # UTM5 call format: server.v1.libraries.services.list(token, int, int, "STRING" , [])
+    # UTM6 call format: server.v1.libraries.services.list(token, int, int, {STRUCT} , [])
+    totalServices    = server.v1.libraries.services.list(token, 0, 0, {} , [])['total']
+    UTM2ServicesList = server.v1.libraries.services.list(token, 0, totalServices, {}, [])['items']
+except Exception as err:
+    print(err)
+
+try:
     #UTM2ServicesList = server.v1.libraries.services.fetch(token,list(range(100,9999)))
     #Pull updated networks list from UTM
     UTM2NetworksList = server.v2.nlists.list(token, 'network',0,1000,'')['items']
-    #Pull L7 apps catalog from UTM
-    UTM2L7AppCatalog = server.v2.nlists.list(token, 'network',0,1000,'')['items']
+except Exception as err:
+    print(err)
 
+try:
+    #Pull L7 apps catalog from UTM
+    #UTM2L7AppCatalog = server.v2.nlists.list(token, 'network',0,1000,'')['items']
+    totall7Apps = server.v2.core.get.l7apps(token, 0, 0, {}, [])['count']
+    if totall7Apps == 0:
+        L7Avaliable = False
+    else:
+        L7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, {}, [])['items']
+except Exception as err:
+    print(err)
+
+try:
+    totall7Categories = server.v2.core.get.l7categories(token, 0, 0, '')['count']
+    if totall7Categories == 0:
+        L7Avaliable = False
+    else:
+        L7Categories = server.v2.core.get.l7categories(token, 0, totall7Categories, '')['items']
 except Exception as err:
     print(err)
 
@@ -316,33 +345,26 @@ for importFwRule in importFirewallrules['items']:
 
 #    importFwRule['apps'] = []
     #replace L7 Application names with local IDs
-    #newAppsList = list()
-    if len(importFwRule['apps']) > 0:
-    #if it is not empty, then last element is the human readable list of applications. We pasted it during export process.
-       for x, y in enumerate(importFwRule['apps']):
-           print("1st : {}; 2nd: {}".format(x,y))
-   #         if appName == 'app':
-   #             newAppsList.append(findIDbyName(UTM2L7AppCatalog, appName))
-   #         elif appName == 'ro_group':
-   #             newAppsList.append(findIDbyName())
-   #         else:
-   #             pass
-   #      importFwRule['apps'] = newAppsList
-   # del newAppsList
-    importFwRule['apps'] = []
+    if L7Avaliable:
+        newAppsList = []
+        if len(importFwRule['apps']) > 0:
+            #if it is not empty, then last element is the human readable list of applications. We pasted it during export process.
+            # for app in importFwRule['apps']:
+            #     print(app)
+            for app in importFwRule['apps']:
+                AppType, AppName = app
+                print("AppType: {}, AppName: {}".format(AppType, AppName))
+                #newAppsList.append([AppType, findIDbyName(UTM2L7AppCatalog, AppName)])
+                if AppType == 'app':
+                    newAppsList.append([AppType, findIDbyName(L7Apps, AppName)])
+                elif AppType == 'ro_group':
+                    newAppsList.append([AppType, findIDbyName(L7Categories, AppName)])
 
-
-# temporaryItem = list()
-# for _, item in enumerate(fwRule['apps']):
-#     l7Type, AppID = item
-#     if l7Type == 'app':
-#         temporaryItem.append(findL7AppIDByID(l7Apps['items'], AppID))
-#     elif l7Type == 'ro_group':
-#         temporaryItem.append(findL7CatIDByID(l7Categories['items'], AppID))
-#         fwRule['apps'] = temporaryItem
-# fwRule['apps'] = []
-# fwRule['apps'].append(temporaryItem)
-
+            importFwRule['apps'] = newAppsList
+            #del newAppsList
+            print("importFwRule['apps'] : {}".format(importFwRule['apps']))
+    else:
+        importFwRule['apps'] = []
 
 
     print('Importing rule:'+' ['+str(importFirewallrules['count'])+'/'+str(importFirewallrules['count'] - rules_left +1) +']  Name: '+ importFwRule['name'])

@@ -136,7 +136,8 @@ time.sleep(1)
 ###############################################################
 #                     Pull l7 apps catalog                    #
 ###############################################################
-l7Apps = server.v2.core.get.l7apps(token, 0, 10000, '')
+totall7Apps = server.v2.core.get.l7apps(token, 0, 0, '')['count']
+l7Apps = server.v2.core.get.l7apps(token, 0, totall7Apps, '')
 #Dump l7 apps catalog on disk
 if len(l7Apps):
     with open('l7_apps.json','w') as f:
@@ -148,7 +149,8 @@ time.sleep(1)
 ###############################################################
 #                     Pull l7 app categories                  #
 ###############################################################
-l7Categories = server.v2.core.get.l7categories(token, 0, 10000, '')
+totall7Categories = server.v2.core.get.l7categories(token, 0, 10000, '')['count']
+l7Categories = server.v2.core.get.l7categories(token, 0, totall7Categories, '')
 #Dump l7 categories catalog on disk
 if len(l7Categories):
     with open('l7_categories.json','w') as f:
