@@ -54,12 +54,12 @@ def findNetByID(NetwoksList, search_id):
             return _['name']
 
 
-def findL7AppIDByID(AppsCatalog, search_id):
+def findL7AppNameByID(AppsCatalog, search_id):
     for _ in AppsCatalog:
         if _['app_id'] == search_id:
             return _['name']
 
-def findL7CatIDByID(CategoriesCatalog, search_id):
+def findL7CatNameByID(CategoriesCatalog, search_id):
     for _ in CategoriesCatalog:
         if _['id'] == search_id:
             return _['name']
@@ -244,12 +244,12 @@ for fwRule in fwRules['items']:
         for _, item in enumerate(fwRule['apps']):
             l7Type, AppID = item
             if l7Type == 'app':
-                temporaryItem.append(findL7AppIDByID(l7Apps['items'], AppID))
+                temporaryItem.append(['app', findL7AppNameByID(l7Apps['items'], AppID)])
             elif l7Type == 'ro_group':
-                temporaryItem.append(findL7CatIDByID(l7Categories['items'], AppID))
+                temporaryItem.append(['ro_group', findL7CatNameByID(l7Categories['items'], AppID)])
                 fwRule['apps'] = temporaryItem
         fwRule['apps'] = []
-        fwRule['apps'].append(temporaryItem)
+        fwRule['apps']= temporaryItem
 
 #dump firewall rules to disk
 with open('firewall_rules.json','w') as f:
