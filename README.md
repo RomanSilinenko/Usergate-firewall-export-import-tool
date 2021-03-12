@@ -37,3 +37,4 @@ Tested:
 - Add scenario criteria export\import
 - Add users criteria export\import
 - Do something with imports section. It is not pretty.
+- Unify print arguments
